@@ -14,7 +14,7 @@ const PAYLOAD_VITALICIO = {
     "refresh_token": "REFRESH_TOKEN_FAKE",
     
     // --- Para a versão Antiga (WhatsApp/V1) ---
-    "email": "auditoria@maximizemkt.com.br",
+    "email": "auditoria@mps.com.br",
     "access": [{
         "key": "f2ba10de-e001-4b77-89fe-9e7575de20c8",
         "status": "ACTIVE", // <--- O Pulo do Gato: Status Ativo Forçado
@@ -38,7 +38,7 @@ const PAYLOAD_VITALICIO = {
     "user_data": {
         "id": "auditoria-user",
         "name": "Hacker Easypanel",
-        "email": "auditoria@maximizemkt.com.br",
+        "email": "auditoria@mps.com.br",
         "plan": { "status": "active", "name": "lifetime" }
     }
 };
