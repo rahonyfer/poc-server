@@ -74,6 +74,18 @@ app.post('/sessions', (req, res) => {
     });
 });
 
+// Rota de Flags (O que estava dando erro 404)
+app.get('/flags/tenant/:id', (req, res) => {
+    console.log(`[FLAGS] Verificação de flags recebida para: ${req.params.id}`);
+    
+    // Responde com uma lista de funcionalidades ativas para enganar a extensão
+    res.json([
+        { "name": "all_features", "enabled": true },
+        { "name": "beta_access", "enabled": true },
+        { "name": "unlimited_messages", "enabled": true }
+    ]);
+});
+
 app.get('/', (req, res) => res.send('<h1>SERVIDOR PIRATA ONLINE 🏴‍☠️</h1>'));
 
 const PORT = process.env.PORT || 3000;
