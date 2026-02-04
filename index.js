@@ -74,11 +74,9 @@ app.post('/sessions', (req, res) => {
     });
 });
 
-// Rota de Flags (O que estava dando erro 404)
-app.get('/flags/tenant/:id', (req, res) => {
-    console.log(`[FLAGS] Verificação de flags recebida para: ${req.params.id}`);
-    
-    // Responde com uma lista de funcionalidades ativas para enganar a extensão
+// Rota de Flags "Universal" (Aceita qualquer ID que a extensão mandar)
+app.get('/flags/tenant/*', (req, res) => {
+    console.log(`[FLAGS] Solicitado para: ${req.params[0]}`);
     res.json([
         { "name": "all_features", "enabled": true },
         { "name": "beta_access", "enabled": true },
@@ -86,7 +84,9 @@ app.get('/flags/tenant/:id', (req, res) => {
     ]);
 });
 
+// Rota Raiz
 app.get('/', (req, res) => res.send('<h1>SERVIDOR PIRATA ONLINE 🏴‍☠️</h1>'));
 
+// Iniciar
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
