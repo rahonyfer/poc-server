@@ -6,11 +6,11 @@ app.use(cors());
 app.use(express.json());
 
 // ==================================================================
-// 🔐 LISTAS DE CLIENTES (UUID)
+// 🔐 LISTAS DE ACESSO (UUID)
 // ==================================================================
 
 const CHAVES_VIP = [
-    "39c9def5-e7c1-43f3-bca1-b4a4d01df25c", // <--- SUA CHAVE ESTÁ AQUI
+    "39c9def5-e7c1-43f3-bca1-b4a4d01df25c", // <--- SUA CHAVE BRUNA
     "550e8400-e29b-41d4-a716-446655440000",
     "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     "f47ac10b-58cc-4372-a567-0e02b2c3d479",
@@ -51,46 +51,52 @@ const CATALOGO_FUNIS = [
        "funnelAmount": 17,
        "status": true
     }
-    // ... adicione os outros funis aqui ...
+    // ... Adicione os outros funis aqui ...
 ];
 
-// VARIÁVEL DE MEMÓRIA GLOBAL (CRUCIAL)
-let MEMORIA_ACESSO = "STD"; 
+// MEMÓRIA GLOBAL (Começa Bloqueada)
+let ULTIMO_STATUS = "BLOQUEADO"; 
+let ULTIMO_EMAIL = "bloqueado@erro.com";
 
 // ==================================================================
-// 1. ROTA DE VERIFICAÇÃO
+// 1. ROTA DE VERIFICAÇÃO (CRÍTICA)
 // ==================================================================
 app.get('/extension/verify/:id', (req, res) => {
-    // Removemos espaços e aspas extras que podem vir
-    const chave = req.params.id.replace(/['"]+/g, '').trim();
-    
-    console.log(`[VERIFY] Recebido: "${chave}"`);
+    // Limpeza da chave
+    let chave = req.params.id;
+    if (chave) chave = chave.replace(/['"]+/g, '').trim();
 
-    // Resetamos a memória para evitar falsos positivos
-    MEMORIA_ACESSO = "INVALIDO";
+    console.log(`[VERIFY] Recebido da Extensão: "${chave}"`);
 
-    let perfil = "INVALIDO";
-    let emailResponse = "erro@erro.com";
+    // RESETA A MEMÓRIA (Segurança para não deixar logar com status antigo)
+    ULTIMO_STATUS = "BLOQUEADO";
 
+    // 1. DETECÇÃO DE LIXO DE CACHE (O erro que você estava tendo)
+    if (chave === "user-STD" || chave === "user-VIP" || chave === "undefined") {
+        console.log("--> ERRO: Cache sujo detectado. Rejeitando para forçar limpeza.");
+        return res.status(403).json({ error: "Cache inválido. Limpe os dados do navegador." });
+    }
+
+    // 2. VERIFICAÇÃO REAL
     if (CHAVES_VIP.includes(chave)) {
-        console.log("--> SUCESSO: É UMA CHAVE VIP! 💎");
-        perfil = "VIP";
-        emailResponse = "admin@vip.com";
-        MEMORIA_ACESSO = "VIP"; // Salva na memória
+        console.log("--> SUCESSO: CHAVE VIP VÁLIDA! 💎");
+        ULTIMO_STATUS = "VIP";
+        ULTIMO_EMAIL = "admin@vip.com";
     } else if (CHAVES_COMUM.includes(chave)) {
-        console.log("--> SUCESSO: É UMA CHAVE COMUM! 👤");
-        perfil = "STD";
-        emailResponse = "user@comum.com";
-        MEMORIA_ACESSO = "STD"; // Salva na memória
+        console.log("--> SUCESSO: CHAVE COMUM VÁLIDA! 👤");
+        ULTIMO_STATUS = "STD";
+        ULTIMO_EMAIL = "user@comum.com";
     } else {
-        console.log("--> ERRO: CHAVE NÃO ENCONTRADA NA LISTA. ⛔");
+        console.log("--> FALHA: CHAVE NÃO EXISTE NA LISTA. ⛔");
+        // Retorna 404 para a extensão mostrar "Chave Inválida"
         return res.status(404).json({ error: "Chave nao encontrada" });
     }
 
+    // Se passou, retorna sucesso para a extensão avançar para o login
     res.json({
         "id": "USER-" + chave,
-        "email": emailResponse,
-        "name": (perfil === "VIP") ? "Membro VIP" : "Membro Standard",
+        "email": ULTIMO_EMAIL,
+        "name": (ULTIMO_STATUS === "VIP") ? "Membro VIP" : "Membro Standard",
         "subscription": {
             "id": "sub-" + chave,
             "status": "ACTIVE",
@@ -102,20 +108,21 @@ app.get('/extension/verify/:id', (req, res) => {
 });
 
 // ==================================================================
-// 2. ROTA DE LOGIN (USA A MEMÓRIA)
+// 2. ROTA DE LOGIN (AQUI IMPEDIMOS QUE 'QUALQUER UM' ENTRE)
 // ==================================================================
 app.post('/sessions', (req, res) => {
-    console.log(`[LOGIN] Solicitado. Memória do servidor diz: ${MEMORIA_ACESSO}`);
+    console.log(`[LOGIN] Solicitado. Status na Memória: ${ULTIMO_STATUS}`);
 
-    // Se a memória estiver INVALIDA, significa que o usuário não passou pelo verify corretamente
-    if (MEMORIA_ACESSO === "INVALIDO") {
-        return res.status(401).json({ error: "Faça a verificação primeiro." });
+    // SE A VERIFICAÇÃO FALHOU ANTES, O LOGIN FALHA AGORA.
+    // Isso impede que "qualquer chave" entre.
+    if (ULTIMO_STATUS === "BLOQUEADO") {
+        console.log("--> LOGIN RECUSADO: Verificação não foi concluída. ⛔");
+        return res.status(401).json({ error: "Acesso não autorizado. Verifique a chave." });
     }
 
-    const emailFinal = (MEMORIA_ACESSO === "VIP") ? "admin@vip.com" : "user@comum.com";
-
+    // Se a memória está OK, libera o acesso correto
     res.json({
-        "access_token": `TOKEN_SECURE_${MEMORIA_ACESSO}_ACCESS`,
+        "access_token": `TOKEN_SECURE_${ULTIMO_STATUS}_ACCESS`,
         "refreshToken": "REFRESH_TOKEN_FAKE",
         "session": {
             "id": "sess-" + Date.now(),
@@ -123,25 +130,25 @@ app.post('/sessions', (req, res) => {
             "expiresOn": "2099-12-31T23:59:59.000Z",
             "status": "ACTIVE",
             "user": {
-                "id": "user-" + MEMORIA_ACESSO,
-                "name": (MEMORIA_ACESSO === "VIP") ? "Membro VIP" : "Membro Standard",
-                "email": emailFinal
+                "id": "user-" + ULTIMO_STATUS,
+                "name": (ULTIMO_STATUS === "VIP") ? "Membro VIP" : "Membro Standard",
+                "email": ULTIMO_EMAIL
             }
         }
     });
 });
 
 // ==================================================================
-// 3. ROTA DE BACKUP
+// 3. ROTA DE BACKUP (SÓ ENTREGA SE FOR VIP)
 // ==================================================================
 app.get('/backup', (req, res) => {
-    console.log(`[BACKUP] Solicitado. Nível de acesso: ${MEMORIA_ACESSO}`);
+    console.log(`[BACKUP] Solicitado. Status Atual: ${ULTIMO_STATUS}`);
     
-    if (MEMORIA_ACESSO === "VIP") {
+    if (ULTIMO_STATUS === "VIP") {
         console.log("--> Liberando Funis 💎");
         res.json(CATALOGO_FUNIS);
     } else {
-        console.log("--> Bloqueando Funis (Standard) 👤");
+        console.log("--> Bloqueando Funis (Lista Vazia) 👤");
         res.json([]);
     }
 });
@@ -153,7 +160,7 @@ app.get('/audios', (req, res) => res.json([]));
 app.get('/messages', (req, res) => res.json([]));
 app.get('/medias', (req, res) => res.json([]));
 
-app.get('/', (req, res) => res.send('<h1>SERVIDOR UUID PRONTO 🟢</h1>'));
+app.get('/', (req, res) => res.send('<h1>SERVIDOR BLINDADO FINAL 🔒</h1>'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
