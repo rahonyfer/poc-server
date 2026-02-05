@@ -6,26 +6,14 @@ app.use(cors());
 app.use(express.json());
 
 // ==================================================================
-// 🔐 LISTAS DE ACESSO (UUID)
+// 🔑 SUAS DUAS CHAVES OFICIAIS
 // ==================================================================
+const CHAVE_VIP = "39c9def5-e7c1-43f3-bca1-b4a4d01df25c";
+const CHAVE_STD = "39m9dax5-b7o1-43t3-aut1-o4m4a01ca25o";
 
-const CHAVES_VIP = [
-    "39c9def5-e7c1-43f3-bca1-b4a4d01df25c", // <--- SUA CHAVE BRUNA
-    "550e8400-e29b-41d4-a716-446655440000",
-    "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-    "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "c91d4e02-1234-4567-8901-abcdef123456"
-];
-
-const CHAVES_COMUM = [
-    "b491266b-4e67-4638-8924-111111111111",
-    "c523456d-5f78-4749-9035-222222222222",
-    "d634567e-6a89-4850-0146-333333333333",
-    "e745678f-7b90-4961-1257-444444444444",
-    "f856789a-8c01-5072-2368-555555555555"
-];
-
-// --- CATÁLOGO DE FUNIS ---
+// ==================================================================
+// 📦 CATÁLOGO DE FUNIS (OS DADOS DO PRODUTOR)
+// ==================================================================
 const CATALOGO_FUNIS = [
     {
        "id": "72424620-9792-4f8e-ac9a-85021b348a0e",
@@ -50,117 +38,167 @@ const CATALOGO_FUNIS = [
        "mediaAmount": 23,
        "funnelAmount": 17,
        "status": true
+    },
+    {
+       "id": "cc518eac-b94a-4533-92f8-d6d64e03b088",
+       "productTitle": "FUNIL - 100DORES - ANTIGO ✅✅",
+       "description": null,
+       "backupUri": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/cc518eac-b94a-4533-92f8-d6d64e03b088.json?update=22:45:17",
+       "productImage": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/cc518eac-b94a-4533-92f8-d6d64e03b088.png",
+       "messageAmount": 16,
+       "audioAmount": 28,
+       "mediaAmount": 21,
+       "funnelAmount": 15,
+       "status": true
+    },
+    {
+       "id": "cbeb9d22-95ca-4ab4-a061-a952659233a0",
+       "productTitle": "FÚNIL LIGAÇÃO FEMININO ATUALIZADO ✅",
+       "description": "Fúnil gravado na voz feminina",
+       "backupUri": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/cbeb9d22-95ca-4ab4-a061-a952659233a0.json?update=19:34:15",
+       "productImage": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/cbeb9d22-95ca-4ab4-a061-a952659233a0.png",
+       "messageAmount": 7,
+       "audioAmount": 22,
+       "mediaAmount": 14,
+       "funnelAmount": 10,
+       "status": true
+    },
+    {
+       "id": "6f06cab9-ef37-46b8-9fcd-e53185aedd2d",
+       "productTitle": "FÚNIL TADALA PREMIUM - VOZ FEMININA ATUALIZADO 👩🏻‍💻",
+       "description": "Funil gravado na voz feminina.",
+       "backupUri": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/6f06cab9-ef37-46b8-9fcd-e53185aedd2d.json?update=22:15:45",
+       "productImage": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/6f06cab9-ef37-46b8-9fcd-e53185aedd2d.png",
+       "messageAmount": 6,
+       "audioAmount": 13,
+       "mediaAmount": 3,
+       "funnelAmount": 8,
+       "status": true
+    },
+    {
+       "id": "be4af0ac-600d-4dbd-8ca1-947586df4e21",
+       "productTitle": "✅ FÚNIL ATUALIZADO - TADALA",
+       "description": "Fúnil gravado na voz masculina.",
+       "backupUri": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/be4af0ac-600d-4dbd-8ca1-947586df4e21.json?update=18:20:55",
+       "productImage": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/be4af0ac-600d-4dbd-8ca1-947586df4e21.png",
+       "messageAmount": 11,
+       "audioAmount": 24,
+       "mediaAmount": 10,
+       "funnelAmount": 18,
+       "status": true
+    },
+    {
+       "id": "42843f9c-a282-4cfd-99ff-b7be3706a082",
+       "productTitle": "FUNIL ATUALIZADO BOMBA + GEL ✅",
+       "description": null,
+       "backupUri": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/42843f9c-a282-4cfd-99ff-b7be3706a082.json?update=18:19:16",
+       "productImage": "https://zap-funnel-backups.s3.us-east-1.amazonaws.com/f9bb264b-8c15-448c-952f-517207a75fd3/f9bb264b-8c15-448c-952f-517207a75fd3/42843f9c-a282-4cfd-99ff-b7be3706a082.png",
+       "messageAmount": 5,
+       "audioAmount": 7,
+       "mediaAmount": 8,
+       "funnelAmount": 7,
+       "status": true
     }
-    // ... Adicione os outros funis aqui ...
 ];
 
-// MEMÓRIA GLOBAL (Começa Bloqueada)
-let ULTIMO_STATUS = "BLOQUEADO"; 
-let ULTIMO_EMAIL = "bloqueado@erro.com";
+// VARIÁVEL GLOBAL PARA GUARDAR QUEM ESTÁ LOGANDO
+// (Resolve o bug do email undefined)
+let ACESSO_ATUAL = "STD"; 
 
 // ==================================================================
-// 1. ROTA DE VERIFICAÇÃO (CRÍTICA)
+// 1. ROTA DE VERIFICAÇÃO (CHECA A CHAVE)
 // ==================================================================
 app.get('/extension/verify/:id', (req, res) => {
-    // Limpeza da chave
-    let chave = req.params.id;
-    if (chave) chave = chave.replace(/['"]+/g, '').trim();
+    // Limpa a chave que chegou (tira aspas e espaços)
+    const chaveRecebida = req.params.id.replace(/['"]+/g, '').trim();
+    console.log(`[VERIFICACAO] Chave digitada: ${chaveRecebida}`);
 
-    console.log(`[VERIFY] Recebido da Extensão: "${chave}"`);
+    // RESET DE SEGURANÇA
+    ACESSO_ATUAL = "BLOQUEADO";
 
-    // RESETA A MEMÓRIA (Segurança para não deixar logar com status antigo)
-    ULTIMO_STATUS = "BLOQUEADO";
-
-    // 1. DETECÇÃO DE LIXO DE CACHE (O erro que você estava tendo)
-    if (chave === "user-STD" || chave === "user-VIP" || chave === "undefined") {
-        console.log("--> ERRO: Cache sujo detectado. Rejeitando para forçar limpeza.");
-        return res.status(403).json({ error: "Cache inválido. Limpe os dados do navegador." });
+    // 1. É A CHAVE VIP?
+    if (chaveRecebida === CHAVE_VIP) {
+        console.log("--> ACESSO VIP LIBERADO! 💎");
+        ACESSO_ATUAL = "VIP";
+        return res.json({
+            "id": CHAVE_VIP,
+            "email": "admin@vip.com",
+            "name": "Usuario VIP",
+            "subscription": { "status": "ACTIVE", "expiration_date": "2099-12-31T00:00:00.000Z" }
+        });
     }
 
-    // 2. VERIFICAÇÃO REAL
-    if (CHAVES_VIP.includes(chave)) {
-        console.log("--> SUCESSO: CHAVE VIP VÁLIDA! 💎");
-        ULTIMO_STATUS = "VIP";
-        ULTIMO_EMAIL = "admin@vip.com";
-    } else if (CHAVES_COMUM.includes(chave)) {
-        console.log("--> SUCESSO: CHAVE COMUM VÁLIDA! 👤");
-        ULTIMO_STATUS = "STD";
-        ULTIMO_EMAIL = "user@comum.com";
-    } else {
-        console.log("--> FALHA: CHAVE NÃO EXISTE NA LISTA. ⛔");
-        // Retorna 404 para a extensão mostrar "Chave Inválida"
-        return res.status(404).json({ error: "Chave nao encontrada" });
+    // 2. É A CHAVE STANDARD?
+    if (chaveRecebida === CHAVE_STD) {
+        console.log("--> ACESSO COMUM LIBERADO! 👤");
+        ACESSO_ATUAL = "STD";
+        return res.json({
+            "id": CHAVE_STD,
+            "email": "user@std.com",
+            "name": "Usuario Comum",
+            "subscription": { "status": "ACTIVE", "expiration_date": "2099-12-31T00:00:00.000Z" }
+        });
     }
 
-    // Se passou, retorna sucesso para a extensão avançar para o login
-    res.json({
-        "id": "USER-" + chave,
-        "email": ULTIMO_EMAIL,
-        "name": (ULTIMO_STATUS === "VIP") ? "Membro VIP" : "Membro Standard",
-        "subscription": {
-            "id": "sub-" + chave,
-            "status": "ACTIVE",
-            "expiration_date": "2099-12-31T00:00:00.000Z",
-            "start_date": "2024-01-01T00:00:00.000Z",
-            "history": [{ "status": "PAID", "amount": "997" }]
-        }
-    });
+    // 3. É LIXO DE CACHE? (Se for, a gente força limpar)
+    // Se a chave não for nenhuma das duas acima, bloqueia.
+    console.log("--> CHAVE INVÁLIDA OU CACHE SUJO. BLOQUEANDO.");
+    return res.status(403).json({ error: "Chave Invalida. Limpe o Cache." });
 });
 
 // ==================================================================
-// 2. ROTA DE LOGIN (AQUI IMPEDIMOS QUE 'QUALQUER UM' ENTRE)
+// 2. ROTA DE LOGIN (LOGA BASEADO NO QUE ACONTECEU NO VERIFY)
 // ==================================================================
 app.post('/sessions', (req, res) => {
-    console.log(`[LOGIN] Solicitado. Status na Memória: ${ULTIMO_STATUS}`);
+    // Ignora o email que vem da extensão (porque as vezes vem undefined)
+    // Usa a variável ACESSO_ATUAL que definimos no passo anterior
+    console.log(`[LOGIN] Processando login para nível: ${ACESSO_ATUAL}`);
 
-    // SE A VERIFICAÇÃO FALHOU ANTES, O LOGIN FALHA AGORA.
-    // Isso impede que "qualquer chave" entre.
-    if (ULTIMO_STATUS === "BLOQUEADO") {
-        console.log("--> LOGIN RECUSADO: Verificação não foi concluída. ⛔");
-        return res.status(401).json({ error: "Acesso não autorizado. Verifique a chave." });
+    if (ACESSO_ATUAL === "BLOQUEADO") {
+        return res.status(401).json({ error: "Chave Invalida" });
     }
 
-    // Se a memória está OK, libera o acesso correto
+    // Gera o token
+    const emailLogin = (ACESSO_ATUAL === "VIP") ? "admin@vip.com" : "user@std.com";
+    
     res.json({
-        "access_token": `TOKEN_SECURE_${ULTIMO_STATUS}_ACCESS`,
+        "access_token": "TOKEN_VITALICIO_" + ACESSO_ATUAL,
         "refreshToken": "REFRESH_TOKEN_FAKE",
         "session": {
-            "id": "sess-" + Date.now(),
+            "id": "sess-123",
             "startedOn": new Date().toISOString(),
             "expiresOn": "2099-12-31T23:59:59.000Z",
             "status": "ACTIVE",
             "user": {
-                "id": "user-" + ULTIMO_STATUS,
-                "name": (ULTIMO_STATUS === "VIP") ? "Membro VIP" : "Membro Standard",
-                "email": ULTIMO_EMAIL
+                "id": (ACESSO_ATUAL === "VIP") ? CHAVE_VIP : CHAVE_STD,
+                "name": (ACESSO_ATUAL === "VIP") ? "Membro VIP" : "Membro Standard",
+                "email": emailLogin
             }
         }
     });
 });
 
 // ==================================================================
-// 3. ROTA DE BACKUP (SÓ ENTREGA SE FOR VIP)
+// 3. ROTA DE BACKUP (DECIDE SE MOSTRA OS FUNIS)
 // ==================================================================
 app.get('/backup', (req, res) => {
-    console.log(`[BACKUP] Solicitado. Status Atual: ${ULTIMO_STATUS}`);
-    
-    if (ULTIMO_STATUS === "VIP") {
-        console.log("--> Liberando Funis 💎");
+    // Simples e direto: Se a variável global diz que é VIP, entrega.
+    if (ACESSO_ATUAL === "VIP") {
+        console.log("[BACKUP] Entregando Funis (VIP)");
         res.json(CATALOGO_FUNIS);
     } else {
-        console.log("--> Bloqueando Funis (Lista Vazia) 👤");
+        console.log("[BACKUP] Entregando Vazio (Standard)");
         res.json([]);
     }
 });
 
-// Rotas Auxiliares
+// Rotas Extras para não dar erro 404
 app.get('/flags/tenant/*', (req, res) => res.json([{ "name": "all_features", "enabled": true }]));
 app.get('/funnels', (req, res) => res.json([]));
 app.get('/audios', (req, res) => res.json([]));
 app.get('/messages', (req, res) => res.json([]));
 app.get('/medias', (req, res) => res.json([]));
-
-app.get('/', (req, res) => res.send('<h1>SERVIDOR BLINDADO FINAL 🔒</h1>'));
+app.get('/', (req, res) => res.send('<h1>SERVIDOR ATIVO (2 CHAVES)</h1>'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
