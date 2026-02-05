@@ -6,23 +6,25 @@ app.use(cors());
 app.use(express.json());
 
 // ==================================================================
-// 🔐 LISTAS DE CLIENTES
+// 🔐 LISTAS DE CLIENTES (FORMATO UUID)
 // ==================================================================
 
+// LISTA 1: CHAVES VIP (Recebem os Funis do Produtor)
 const CHAVES_VIP = [
-    "VIP-KEY-001",
-    "VIP-KEY-002",
-    "VIP-KEY-003",
-    "VIP-KEY-004",
-    "VIP-KEY-005"
+    "39c9def5-e7c1-43f3-bca1-b4a4d01df25c", // A chave da Bruna (Exemplo)
+    "550e8400-e29b-41d4-a716-446655440000",
+    "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "c91d4e02-1234-4567-8901-abcdef123456"
 ];
 
+// LISTA 2: CHAVES COMUNS (Painel Vazio / Pessoal)
 const CHAVES_COMUM = [
-    "STD-KEY-001",
-    "STD-KEY-002",
-    "STD-KEY-003",
-    "STD-KEY-004",
-    "STD-KEY-005"
+    "b491266b-4e67-4638-8924-111111111111",
+    "c523456d-5f78-4749-9035-222222222222",
+    "d634567e-6a89-4850-0146-333333333333",
+    "e745678f-7b90-4961-1257-444444444444",
+    "f856789a-8c01-5072-2368-555555555555"
 ];
 
 // --- CATÁLOGO DE FUNIS (SEU OURO) ---
@@ -39,7 +41,6 @@ const CATALOGO_FUNIS = [
        "funnelAmount": 28,
        "status": true
     },
-    // ... (Adicione os outros funis aqui) ...
     {
        "id": "82c47b17-a4d2-4bc9-9bf8-7feec8bbb909",
        "productTitle": "FÚNIL 100DORES - ATUALIZADO 2025 ✅",
@@ -52,19 +53,21 @@ const CATALOGO_FUNIS = [
        "funnelAmount": 17,
        "status": true
     }
+    // ... Adicione os outros funis aqui se quiser ...
 ];
 
 // VARIÁVEL DE MEMÓRIA (GLOBAL) PARA SEGURAR O TIPO DE ACESSO
-let ULTIMO_ACESSO_VALIDO = "STD"; // Padrão seguro
+let ULTIMO_ACESSO_VALIDO = "STD"; 
 
 // ==================================================================
 // 1. ROTA DE VERIFICAÇÃO (VALIDA CHAVE E DEFINE PERFIL)
 // ==================================================================
 app.get('/extension/verify/:id', (req, res) => {
-    const chave = req.params.id.trim().toUpperCase();
-    console.log(`[VERIFY] Processando chave: "${chave}"`);
+    // Pega a chave e garante que está limpa
+    const chave = req.params.id.trim();
+    console.log(`[VERIFY] Processando chave UUID: "${chave}"`);
 
-    let perfil = "STD"; // Começa assumindo que é comum
+    let perfil = "STD"; 
     let emailPerfil = "user@comum.com";
 
     if (CHAVES_VIP.includes(chave)) {
@@ -105,10 +108,9 @@ app.get('/extension/verify/:id', (req, res) => {
 // 2. ROTA DE LOGIN (USA A MEMÓRIA PARA NÃO DAR UNDEFINED)
 // ==================================================================
 app.post('/sessions', (req, res) => {
-    // Tenta pegar o email, mas se vier undefined, ignora e usa a memória
+    // Usa a memória do servidor para decidir quem é, ignorando o undefined da extensão
     console.log(`[LOGIN] Solicitado. Memória atual do servidor: ${ULTIMO_ACESSO_VALIDO}`);
 
-    // Define se é VIP ou STD baseado na última verificação válida
     const tipoAcesso = ULTIMO_ACESSO_VALIDO; 
     const emailFinal = (tipoAcesso === "VIP") ? "admin@vip.com" : "user@comum.com";
 
@@ -160,7 +162,7 @@ app.get('/audios', (req, res) => res.json([]));
 app.get('/messages', (req, res) => res.json([]));
 app.get('/medias', (req, res) => res.json([]));
 
-app.get('/', (req, res) => res.send('<h1>SERVIDOR ESTÁVEL ONLINE 🟢</h1>'));
+app.get('/', (req, res) => res.send('<h1>SERVIDOR UUID ONLINE 🟢</h1>'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
