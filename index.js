@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 // ==================================================================
-// 🔐 LISTAS DE ACESSO (RIGOROSAS)
+// 🔐 LISTAS DE ACESSO (AGORA INSENSÍVEIS A MAIÚSCULAS/MINÚSCULAS)
 // ==================================================================
 
 const CHAVES_VIP = [
@@ -25,7 +25,7 @@ const CHAVES_COMUM = [
     "STD-KEY-005"
 ];
 
-// --- O CATÁLOGO DE FUNIS ---
+// --- CATÁLOGO DE FUNIS ---
 const CATALOGO_FUNIS = [
     {
         "id": "72424620-9792-4f8e-ac9a-85021b348a0e",
@@ -39,7 +39,7 @@ const CATALOGO_FUNIS = [
         "funnelAmount": 28,
         "status": true
     },
-    // ... (Mantive curto para não poluir, mas estão todos aqui na lógica) ...
+    // ... Adicione os outros funis aqui se quiser ...
      {
         "id": "82c47b17-a4d2-4bc9-9bf8-7feec8bbb909",
         "productTitle": "FÚNIL 100DORES - ATUALIZADO 2025 ✅",
@@ -54,37 +54,45 @@ const CATALOGO_FUNIS = [
     }
 ];
 
-// 1. ROTA DE VERIFICAÇÃO (O GUARDIÃO DA CHAVE)
+// ==================================================================
+// ROTAS
+// ==================================================================
+
+// 1. VERIFICAÇÃO (EXTREMAMENTE RIGOROSA)
 app.get('/extension/verify/:id', (req, res) => {
-    // Limpa espaços em branco que podem atrapalhar
-    const chave = req.params.id.trim();
-    console.log(`[VERIFY] Tentativa com chave: "${chave}"`);
+    // Normaliza a chave (remove espaços e poe tudo maiúsculo)
+    const chave = req.params.id.trim().toUpperCase();
+    console.log(`[VERIFY] Checando chave: "${chave}"`);
     
-    let isVip = false;
-    let isValid = false;
+    let responseData = null;
 
     if (CHAVES_VIP.includes(chave)) {
-        console.log("--> STATUS: CHAVE VIP ENCONTRADA! 💎");
-        isVip = true;
-        isValid = true;
+        console.log("--> SUCESSO: CHAVE VIP ✅");
+        responseData = {
+            id: "USER-VIP-" + chave,
+            email: "admin@vip.com", // OBRIGATÓRIO PARA VIP
+            name: "Membro VIP",
+            tokenTag: "VIP"
+        };
     } else if (CHAVES_COMUM.includes(chave)) {
-        console.log("--> STATUS: CHAVE COMUM ENCONTRADA! 👤");
-        isVip = false;
-        isValid = true;
+        console.log("--> SUCESSO: CHAVE COMUM ✅");
+        responseData = {
+            id: "USER-STD-" + chave,
+            email: "user@comum.com", // OBRIGATÓRIO PARA COMUM
+            name: "Membro Standard",
+            tokenTag: "STD"
+        };
     } else {
-        console.log("--> STATUS: CHAVE NÃO ENCONTRADA (BLOQUEANDO)! 🚫");
-        // AQUI ESTÁ A MUDANÇA: Se não achou, retorna erro 403 e BLOQUEIA
-        return res.status(403).json({ error: "Chave Inválida ou Não Cadastrada." });
+        console.log("--> FALHA: CHAVE INVÁLIDA ⛔");
+        // AQUI ESTÁ A CORREÇÃO: Retorna erro 404 REAL. A extensão vai exibir "Chave Inválida".
+        return res.status(404).json({ error: "Chave não encontrada" });
     }
 
-    // Se passou, definimos o perfil
-    // O TRUQUE: O email define o destino no próximo passo
-    const userEmail = isVip ? "admin@vip.com" : "user@comum.com";
-
+    // Se chegou aqui, a chave é válida. Envia a resposta de sucesso.
     res.json({
-        "id": "USER-" + chave,
-        "email": userEmail, 
-        "name": isVip ? "Membro VIP" : "Membro Standard",
+        "id": responseData.id,
+        "email": responseData.email,
+        "name": responseData.name,
         "subscription": {
             "id": "sub-" + chave,
             "status": "ACTIVE",
@@ -95,25 +103,27 @@ app.get('/extension/verify/:id', (req, res) => {
     });
 });
 
-// 2. ROTA DE LOGIN (CONFIRMA O PERFIL)
+// 2. LOGIN (CONFIRMAÇÃO DE IDENTIDADE)
 app.post('/sessions', (req, res) => {
-    // Pega o email que definimos no passo anterior
-    const emailLogin = req.body.email || "";
-    console.log(`[LOGIN] Recebido email: "${emailLogin}"`);
+    const emailLogin = req.body.email;
+    console.log(`[LOGIN] Tentativa com email: "${emailLogin}"`);
 
-    // VERIFICAÇÃO DUPLA: O email tem que ser o VIP
-    let tokenType = "STD"; 
-    
+    let tokenType = "";
+
+    // SÓ ACEITA OS EMAILS QUE NÓS DEFINIMOS. QUALQUER OUTRO É BLOQUEADO.
     if (emailLogin === "admin@vip.com") {
-        console.log("--> LOGIN VIP DETECTADO! GERANDO TOKEN DOURADO 🏆");
         tokenType = "VIP";
+    } else if (emailLogin === "user@comum.com") {
+        tokenType = "STD";
     } else {
-        console.log("--> LOGIN COMUM DETECTADO. GERANDO TOKEN PADRÃO 📄");
+        console.log("--> LOGIN BLOQUEADO: Email desconhecido ou cache antigo ⛔");
+        return res.status(401).json({ error: "Login não autorizado para este email." });
     }
 
+    console.log(`--> Login Permitido. Nível: ${tokenType} ✅`);
+
     res.json({
-        // Colocamos a marca no token de forma bem visível
-        "access_token": `TOKEN_SECURE_${tokenType}_ACCESS`, 
+        "access_token": `TOKEN_SECURE_${tokenType}_ACCESS`,
         "refreshToken": "REFRESH_TOKEN_FAKE",
         "session": {
             "id": "sess-" + Date.now(),
@@ -122,35 +132,35 @@ app.post('/sessions', (req, res) => {
             "status": "ACTIVE",
             "user": {
                 "id": "user-" + tokenType,
-                "name": (tokenType === "VIP") ? "Membro VIP" : "Membro Pessoal",
+                "name": (tokenType === "VIP") ? "Membro VIP" : "Membro Standard",
                 "email": emailLogin
             }
         }
     });
 });
 
-// 3. ROTA DE BACKUP (ENTREGA SE TIVER A MARCA VIP)
+// 3. BACKUP (ENTREGA CONDICIONAL)
 app.get('/backup', (req, res) => {
     const authHeader = req.headers.authorization || "";
-    console.log(`[BACKUP] Solicitado com token: ${authHeader}`);
+    console.log(`[BACKUP] Solicitado. Token contém VIP? ${authHeader.includes("VIP")}`);
     
-    // Procura a palavra "VIP" dentro do token que geramos no login
+    // Verifica rigorosamente a marca no token
     if (authHeader.includes("VIP")) {
-        console.log("[API] Permissão VIP Confirmada: Entregando Funis!");
+        console.log("--> Entregando Funis 💎");
         res.json(CATALOGO_FUNIS);
     } else {
-        console.log("[API] Permissão Standard: Entregando Lista Vazia.");
+        console.log("--> Entregando Vazio (Standard) 👤");
         res.json([]);
     }
 });
 
-// 4. Rotas Auxiliares
+// 4. Placeholders
 app.get('/flags/tenant/*', (req, res) => res.json([{ "name": "all_features", "enabled": true }]));
 app.get('/funnels', (req, res) => res.json([]));
 app.get('/audios', (req, res) => res.json([]));
 app.get('/messages', (req, res) => res.json([]));
 app.get('/medias', (req, res) => res.json([]));
-app.get('/', (req, res) => res.send('<h1>SERVIDOR BLINDADO (VIP/STD) 🔒</h1>'));
+app.get('/', (req, res) => res.send('<h1>SERVIDOR BLINDADO 2.0 🔒</h1>'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
