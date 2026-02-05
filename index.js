@@ -5,6 +5,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ==================================================================
+// 🔐 CONFIGURAÇÃO DE CLIENTES (LISTAS DE CHAVES)
+// ==================================================================
+
+// LISTA 1: VIP (Recebem os Funis do Produtor)
+const CHAVES_VIP = [
+    "VIP-KEY-001",
+    "VIP-KEY-002",
+    "VIP-KEY-003",
+    "VIP-KEY-004",
+    "VIP-KEY-005"
+];
+
+// LISTA 2: COMUM (Painel Vazio / Pessoal)
+const CHAVES_COMUM = [
+    "STD-KEY-001",
+    "STD-KEY-002",
+    "STD-KEY-003",
+    "STD-KEY-004",
+    "STD-KEY-005"
+];
+
 // --- 1. O CATÁLOGO DE FUNIS (EXTRAÍDO COM A CHAVE VÁLIDA) ---
 const CATALOGO_FUNIS = [
     {
@@ -93,26 +115,41 @@ const CATALOGO_FUNIS = [
     }
 ];
 
-// 2. DADOS DA CONTA (Vamos manter a da Bruna para liberar o login no painel)
-const USER_ID = "39c9def5-e7c1-43f3-bca1-b4a4d01df25c";
-const EMAIL = "eubruninharibeiro@gmail.com";
-const NAME = "Bruna Silva Ribeiro";
-
-// 3. Rota de Verificação (GET)
+// 3. Rota de Verificação (GET) - AGORA COM LÓGICA VIP/COMUM
 app.get('/extension/verify/:id', (req, res) => {
-    console.log(`[VERIFICACAO] ID consultado: ${req.params.id}`);
+    const chave = req.params.id;
+    console.log(`[VERIFICACAO] Chave consultada: ${chave}`);
+    
+    // Configuração Padrão (COMUM)
+    let userData = {
+        id: "USER-STD-" + chave,
+        email: "user@comum.com",
+        name: "Usuario Comum",
+        tokenTag: "STD"
+    };
+
+    // Se for Chave VIP, mudamos o perfil
+    if (CHAVES_VIP.includes(chave)) {
+        userData = {
+            id: "USER-VIP-" + chave,
+            email: "admin@vip.com", // Email que libera funis
+            name: "Usuario VIP",
+            tokenTag: "VIP"
+        };
+    }
+
     res.json({
-        "id": USER_ID,
-        "email": EMAIL,
-        "name": NAME,
+        "id": userData.id,
+        "email": userData.email,
+        "name": userData.name,
         "subscription": {
-            "id": "865279c3-7385-4fdc-8abe-7f8f6f842e6e",
+            "id": "sub-vitalicia-" + chave,
             "status": "ACTIVE",
             "expiration_date": "2099-12-31T00:00:00.000Z",
             "start_date": "2024-11-07T00:00:00.000Z",
             "history": [{
-                "id": "690a2c1c-2179-4214-8600-0e01ba250f71",
-                "amount": "57",
+                "id": "hist-01",
+                "amount": "997",
                 "expiration_date": "2099-12-31T00:00:00.000Z",
                 "status": "PAID",
                 "payment_method": "CREDIT_CARD",
@@ -122,18 +159,28 @@ app.get('/extension/verify/:id', (req, res) => {
     });
 });
 
-// 4. Rota de Login (POST)
+// 4. Rota de Login (POST) - GERA TOKEN VIP OU COMUM
 app.post('/sessions', (req, res) => {
-    console.log("[LOGIN] Tentativa recebida");
+    const emailLogin = req.body.email || "";
+    console.log(`[LOGIN] Tentativa: ${emailLogin}`);
+
+    // Verifica se é VIP baseado no email retornado no passo anterior
+    let isVip = (emailLogin === "admin@vip.com");
+    let tokenType = isVip ? "VIP" : "STD";
+
     res.json({
-        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzOWM5ZGVmNS1lN2MxLTQzZjMtYmNhMS1iNGE0ZDAxZGYyNWMiLCJzaWQiOiJkNDY5MzNkMy1jZTIyLTQ4ODQtYjZmYy0yMjM0YTFmZWQ1NWIiLCJzZXNzaW9uIjp7ImlkIjoiZDQ2OTMzZDMtY2UyMi00ODg0LWI2ZmMtMjIzNGExZmVkNTViIiwic3RhcnRlZE9uIjoiMjAyNi0wMi0wNFQyMzoxNTozNy41MTlaIiwiZXhwaXJlc09uIjoiMjA5OS0xMi0zMVQyMzoxNTozNy41MTlaIiwic3RhdHVzIjoiQUNUSVZFIiwidXNlciI6eyJpZCI6IjM5YzlkZWY1LWU3YzEtNDNmMy1iY2ExLWI0YTRkMDFkZjI1YyIsIm5hbWUiOiJCcnVuYSBTaWx2YSBSaWJlaXJvIiwiZW1haWwiOiJldWJydW5pbmhhcmliZWlyb0BnbWFpbC5jb20ifX0sImdyYW50VHlwZSI6InJlZnJlc2gtdG9rZW4iLCJpYXQiOjE3NzAyNDY5MzcsImV4cCI6MTc3MDI5MDEzN30.zokcA0YfquMOaAP0vAXrgkazVl5SixlB8QThyI73JsM",
-        "refreshToken": "c1c2b2b040f79cceb06157b86d97e0208ec7200487322d4359eca32ae6b9f305",
+        "access_token": `TOKEN_${tokenType}_VITALICIO_SECURE`, // O Token carrega a marca
+        "refreshToken": "REFRESH_TOKEN_FAKE",
         "session": {
-            "id": "d46933d3-ce22-4884-b6fc-2234a1fed55b",
-            "startedOn": "2026-02-04T23:15:37.519Z",
-            "expiresOn": "2099-12-31T23:15:37.519Z",
+            "id": "sess-" + Date.now(),
+            "startedOn": new Date().toISOString(),
+            "expiresOn": "2099-12-31T23:59:59.000Z",
             "status": "ACTIVE",
-            "user": { "id": USER_ID, "name": NAME, "email": EMAIL }
+            "user": {
+                "id": "user-" + tokenType,
+                "name": isVip ? "Membro VIP" : "Membro Pessoal",
+                "email": emailLogin
+            }
         }
     });
 });
@@ -148,20 +195,29 @@ app.get('/flags/tenant/*', (req, res) => {
     ]);
 });
 
-// --- 6. ROTA DE BACKUP (AQUI ESTÁ O SEGREDO) ---
-// Quando a extensão pedir '/backup', seu servidor entrega a lista que você pegou.
+// --- 6. ROTA DE BACKUP (ENTREGA CONDICIONAL) ---
 app.get('/backup', (req, res) => {
-    console.log("[API] Entregando Catálogo de Funis (Hospedado Localmente)");
-    res.json(CATALOGO_FUNIS);
+    // Pega o token enviado pela extensão
+    const authHeader = req.headers.authorization || "";
+    
+    // Se o token tiver a marca "VIP", entrega o ouro
+    if (authHeader.includes("VIP")) {
+        console.log("[API] Cliente VIP: Entregando Funis do Produtor");
+        res.json(CATALOGO_FUNIS);
+    } else {
+        // Se não, entrega lista vazia
+        console.log("[API] Cliente Comum: Entregando Painel Vazio");
+        res.json([]);
+    }
 });
 
-// 7. Rotas "Placeholder" para evitar erros no Console (lista vazia para o que não temos)
+// 7. Rotas "Placeholder"
 app.get('/funnels', (req, res) => res.json([]));
 app.get('/audios', (req, res) => res.json([]));
 app.get('/messages', (req, res) => res.json([]));
 app.get('/medias', (req, res) => res.json([]));
 
-app.get('/', (req, res) => res.send('<h1>SERVIDOR ATIVO E CARREGADO COM FUNIS 🏴‍☠️</h1>'));
+app.get('/', (req, res) => res.send('<h1>SERVIDOR OTIMIZADO (VIP/STD) 🟢</h1>'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
